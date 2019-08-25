@@ -1,0 +1,145 @@
+agents:-
+    perceive(Percepts),
+    action(Percepts).
+
+perceive(Head):-
+    nl,
+    write('Write as list'),
+    nl,
+    read(List),
+    Head = List.
+
+respond(Head):-
+    member(Head,[q,quit,end,stop,halt]).
+
+action(Head):-
+    respond(Head).
+
+action(Head):-
+   sentence(Head,Action),
+   sent(Action,X,Y,Z),
+   syn(Syn,Y),
+   syn(Syn2,Z),
+   present(_,X,verb(Syn),Syn2),
+   agents.
+
+
+det(the).
+det(a).
+det(an).
+
+noun(boy).
+noun(problem).
+noun(girl).
+noun(challenge).
+noun(grandfather).
+noun(book).
+noun(person).
+noun(conversation).
+noun(father).
+noun(golf).
+noun(student).
+noun(party).
+
+verb(loves).
+verb(likes).
+verb(adores).
+verb(thrives).
+
+prep(on).
+prep(with).
+
+adj(very).
+adj(manual).
+adj(young).
+adj(teenage).
+adj(elderly).
+adj(lonely).
+adj(good).
+
+
+synonym(likes,[likes]).
+synonym(thrives,[thrives]).
+synonym(loves,[likes,adores,loves]).
+
+synonym(object(challenge),[object(problem),object(challenge)]).
+synonym(object(manual,problem),[object(manual,problem)]).
+synonym(object(good,book),[object(good,book)]).
+synonym(object(with,conversation),[object(with,conversation)]).
+synonym(object(golf),[object(golf)]).
+synonym(object(party),[object(party)]).
+
+
+
+
+syn(Word,P_Word) :-
+    synonym(Word, List),
+    member(P_Word, List).
+
+
+sentence(Sentence,sentence(Noun_Phrase,Verb_Phrase)):-
+    np(Sentence,Noun_Phrase,Rem),
+    vp(Rem,Verb_Phrase).
+
+sent(sentence(NP1,verb_phrase(V,NP2)),Subj,Verb,Obj) :-
+  subj(NP1,Subj),verb(V,Verb), obj(NP2,Obj).
+
+subj(noun_phrase(_,np2(adj(A),np2(noun(N)))),subject(A,N)).
+subj(noun_phrase(_,np2(adj(A1),np2(adj(A2),np2(noun(N))))),subject(A1,A2,N)).
+
+verb(verb(V),V).
+
+obj(np(_,np2(adj(A1),np2(adj(A2),np2(noun(N))))),object(A1,A2,N)).
+obj(np(_,np2(adj(A),np2(noun(N)))),object(A,N)).
+obj(np(_,np2(noun(N))),object(N)).
+obj(pp(prep(P),np(_,np2(noun(N)))),object(P,N)).
+obj(np2(noun(N)),object(N)).
+
+
+np([X|T],noun_phrase(det(X),NP2),Rem):-
+    det(X),np2(T,NP2,Rem).
+np(Sentence,Parse,Rem):-
+    np2(Sentence,Parse,Rem).
+np(Sentence,noun_phrase(NP,PP),Rem):-
+    noun_phrase(Sentence,NP,Rem1),
+    pp(Rem1,PP,Rem).
+
+np2([H|T],np2(noun(H)),T):-
+    noun(H).
+np2([H|T],np2(adj(H),Rest),Rem):-
+    adj(H),np2(T,Rest,Rem).
+
+pp([H|T],pp(prep(H),Parse),Rem):-
+    prep(H),noun_phrase(T,Parse,Rem).
+
+noun_phrase([X|T],np(det(X),NP2),Rem):-
+    det(X),np2(T,NP2,Rem).
+
+vp([H|T],verb(H)):-
+    verb(H),T = [].
+
+vp([H|T],verb_phrase(verb(H),Parsed)):-
+    verb(H),noun_phrase(T,Parsed,_).
+vp([H|T],verb_phrase(verb(H),Parsed)):-
+    verb(H),np2(T,Parsed,_).
+
+vp([H|T],verb_phrase(verb(H),Parsed)):-
+    verb(H), pp(T,Parsed,_).
+
+present(construction_kit,subject(very,young,boy),verb(loves),object(manual,problem)):-
+    write('Get a construction kit').
+
+present(raspberry_PI,subject(teenage,girl),verb(loves),object(challenge)):-
+    write('Get a Raspberry Pi').
+
+present(brief_history_of_time,subject(elderly,grandfather),verb(likes),object(good,book)):-
+    write('Get a Brief History of Time').
+
+present(the_internet,subject(lonely,person),verb(thrives),object(with,conversation)):-
+    write('Get The Internet').
+
+present(a_golfing_sweater,subject(young,father),verb(loves),object(golf)):-
+    write('Get a golfing sweater').
+
+present(money,subject(teenage,student),verb(loves),object(party)):-
+    write('Get Money').
